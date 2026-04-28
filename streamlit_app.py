@@ -191,16 +191,26 @@ QUICK_QUESTIONS = [
 # ─────────────────────────────────────────
 @st.cache_resource
 def load_model():
-    genai.configure(api_key=st.secrets["GEMINI_API_KEY"])
-    return genai.GenerativeModel(
-        model_name="gemini-1.5-flash",
-        system_instruction=SYSTEM_PROMPT,
-    )
+    try:
+        api_key = st.secrets["GEMINI_API_KEY"]
+    except KeyError:
+        return None, "GEMINI_API_KEY が Secrets に設定されていません。Streamlit Cloud の Settings → Secrets に追加してください。"
+    try:
+        genai.configure(api_key=api_key)
+        model = genai.GenerativeModel(
+            model_name="gemini-1.5-flash",
+            system_instruction=SYSTEM_PROMPT,
+        )
+        return model, None
+    except Exception as e:
+        return None, f"モデルの初期化に失敗しました（{type(e).__name__}）"
 
 
 def get_response(history: list, user_message: str) -> str:
+    model, err = load_model()
+    if err:
+        return f"⚠️ {err}"
     try:
-        model = load_model()
         gemini_history = []
         for msg in history[-MAX_HISTORY:]:
             role = "user" if msg["role"] == "user" else "model"
@@ -208,8 +218,8 @@ def get_response(history: list, user_message: str) -> str:
         chat = model.start_chat(history=gemini_history)
         response = chat.send_message(user_message)
         return response.text
-    except Exception:
-        return "申し訳ございません。一時的なエラーが発生しました。しばらく経ってから再度お試しください。"
+    except Exception as e:
+        return f"⚠️ APIエラーが発生しました（{type(e).__name__}）。しばらく経ってから再度お試しください。"
 
 
 # ─────────────────────────────────────────
