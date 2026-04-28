@@ -198,7 +198,7 @@ def load_model():
     try:
         genai.configure(api_key=api_key)
         model = genai.GenerativeModel(
-            model_name="gemini-1.5-flash",
+            model_name="gemini-2.5-flash-preview-04-17",
             system_instruction=SYSTEM_PROMPT,
         )
         return model, None
