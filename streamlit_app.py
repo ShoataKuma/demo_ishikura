@@ -214,9 +214,9 @@ def get_response(history: list, user_message: str) -> str:
         gemini_history = []
         for msg in history[-MAX_HISTORY:]:
             role = "user" if msg["role"] == "user" else "model"
-            gemini_history.append({"role": role, "parts": [msg["content"]]})
+            gemini_history.append({"role": role, "parts": [{"text": msg["content"]}]})
         chat = model.start_chat(history=gemini_history)
-        response = chat.send_message(user_message)
+        response = chat.send_message({"parts": [{"text": user_message}]})
         return response.text
     except Exception as e:
         return f"⚠️ APIエラーが発生しました（{type(e).__name__}）。しばらく経ってから再度お試しください。"
